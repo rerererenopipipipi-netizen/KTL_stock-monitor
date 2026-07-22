@@ -1,17 +1,18 @@
 import { chromium } from "playwright";
 
 export async function checkHmv(product) {
-
     let browser;
 
     try {
-
         browser = await chromium.launch({
             headless: true
         });
 
         const page = await browser.newPage({
-            userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+            userAgent:
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+                "AppleWebKit/537.36 (KHTML, like Gecko) " +
+                "Chrome/138.0.0.0 Safari/537.36"
         });
 
         await page.goto(product.url, {
@@ -25,12 +26,21 @@ export async function checkHmv(product) {
 
         const outOfStock =
             text.includes("現在オンラインでご注文いただけません") ||
-            text.includes("注文不可");
+            text.includes("現在ご注文いただけません") ||
+            text.includes("注文不可") ||
+            text.includes("完売しました") ||
+            text.includes("品切れ");
+
+        const hasCartButton =
+            text.includes("カートに入れる") ||
+            text.includes("カートへ入れる");
 
         const inStock =
-            text.includes("カートに入れる") &&
-            text.includes("在庫あり");
+            hasCartButton &&
             !outOfStock;
+
+        console.log("HMV カートボタン:", hasCartButton);
+        console.log("HMV 注文不可表示:", outOfStock);
 
         await browser.close();
 
@@ -40,7 +50,6 @@ export async function checkHmv(product) {
         };
 
     } catch (error) {
-
         if (browser) {
             await browser.close();
         }
@@ -50,7 +59,5 @@ export async function checkHmv(product) {
             inStock: false,
             error: error.message
         };
-
     }
-
 }

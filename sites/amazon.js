@@ -40,18 +40,14 @@ export async function checkAmazon(product) {
             await page.waitForTimeout(5000);
         }
 
-        
-        await page.waitForTimeout(5000);
-
+        // HTML確認
         const html = await page.content();
 
         console.log("add-to-cart:", html.includes("add-to-cart-button"));
         console.log("submit.add-to-cart:", html.includes("submit.add-to-cart"));
         console.log("buy-now:", html.includes("buy-now-button"));
 
-        const text = await page.locator("body").innerText();
-
-        
+        // テキスト確認
         const text = await page.locator("body").innerText();
 
         console.log("Amazon ページ先頭:");

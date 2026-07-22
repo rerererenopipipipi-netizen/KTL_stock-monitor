@@ -16,6 +16,7 @@ export async function checkAmazon(product) {
             locale: "ja-JP"
         });
 
+        // 商品ページへアクセス
         await page.goto(product.url, {
             waitUntil: "domcontentloaded",
             timeout: 60000
@@ -23,23 +24,42 @@ export async function checkAmazon(product) {
 
         await page.waitForTimeout(3000);
 
-        // 実際に表示されている「ショッピングを続ける」だけを探す
-        const continueButton = page.locator(
-            'button:visible:has-text("ショッピングを続ける"), ' +
-            'a:visible:has-text("ショッピングを続ける"), ' +
-            'input:visible[value="ショッピングを続ける"]'
-        );
+        const firstPageText = await page.locator("body").innerText();
 
-        if (await continueButton.count() > 0) {
+        // Amazonの「ショッピングを続ける」確認画面だった場合
+        const isContinuePage =
+            firstPageText.includes(
+                "下のボタンをクリックしてショッピングを続けてください"
+            );
+
+        if (isContinuePage) {
             console.log("Amazon 続行画面を検出");
 
-            await continueButton.first().click({
-                timeout: 10000
-            });
+            const continueButton = page.locator(
+                'button:visible:has-text("ショッピングを続ける"), ' +
+                'a:visible:has-text("ショッピングを続ける"), ' +
+                'input:visible[value="ショッピングを続ける"]'
+            );
 
-            await page.waitForLoadState("domcontentloaded", {
+            if (await continueButton.count() > 0) {
+                await continueButton.first().click({
+                    timeout: 10000
+                });
+
+                await page.waitForLoadState("domcontentloaded", {
+                    timeout: 60000
+                }).catch(() => {});
+
+                await page.waitForTimeout(3000);
+            }
+
+            // 続行後はトップページに移動するため、商品ページを再度開く
+            console.log("Amazon 商品ページへ再アクセス");
+
+            await page.goto(product.url, {
+                waitUntil: "domcontentloaded",
                 timeout: 60000
-            }).catch(() => {});
+            });
 
             await page.waitForTimeout(5000);
         }
@@ -47,7 +67,6 @@ export async function checkAmazon(product) {
         console.log("Amazon 現在URL:", page.url());
         console.log("Amazon タイトル:", await page.title());
 
-        // HTML確認
         const html = await page.content();
 
         console.log(
@@ -65,13 +84,15 @@ export async function checkAmazon(product) {
             html.includes("buy-now-button")
         );
 
-        // ページ上の実際の購入ボタンを確認
+        // 実際に表示されている購入ボタンを確認
         const cartButton = page.locator(
-            '#add-to-cart-button, input[name="submit.add-to-cart"]'
+            '#add-to-cart-button, ' +
+            'input[name="submit.add-to-cart"]'
         );
 
         const buyNowButton = page.locator(
-            '#buy-now-button, input[name="submit.buy-now"]'
+            '#buy-now-button, ' +
+            'input[name="submit.buy-now"]'
         );
 
         const hasCartButton =
@@ -82,7 +103,6 @@ export async function checkAmazon(product) {
             await buyNowButton.count() > 0 &&
             await buyNowButton.first().isVisible().catch(() => false);
 
-        // テキスト確認
         const text = await page.locator("body").innerText();
 
         console.log("Amazon ページ先頭:");

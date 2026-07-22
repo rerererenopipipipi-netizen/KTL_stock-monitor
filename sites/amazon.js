@@ -24,9 +24,9 @@ export async function checkAmazon(product) {
 
         await page.waitForTimeout(3000);
 
+        // 「ショッピングを続ける」確認画面か判定
         const firstPageText = await page.locator("body").innerText();
 
-        // Amazonの「ショッピングを続ける」確認画面だった場合
         const isContinuePage =
             firstPageText.includes(
                 "下のボタンをクリックしてショッピングを続けてください"
@@ -53,9 +53,7 @@ export async function checkAmazon(product) {
                 await page.waitForTimeout(3000);
             }
 
-            // 続行後はトップページに移動するため、商品ページを再度開く
-            console.log("Amazon 商品ページへ再アクセス");
-
+            // 続行後はトップページへ移動するため、商品ページを再度開く
             await page.goto(product.url, {
                 waitUntil: "domcontentloaded",
                 timeout: 60000
@@ -67,24 +65,7 @@ export async function checkAmazon(product) {
         console.log("Amazon 現在URL:", page.url());
         console.log("Amazon タイトル:", await page.title());
 
-        const html = await page.content();
-
-        console.log(
-            "add-to-cart:",
-            html.includes("add-to-cart-button")
-        );
-
-        console.log(
-            "submit.add-to-cart:",
-            html.includes("submit.add-to-cart")
-        );
-
-        console.log(
-            "buy-now:",
-            html.includes("buy-now-button")
-        );
-
-        // 実際に表示されている購入ボタンを確認
+        // 購入ボタン
         const cartButton = page.locator(
             '#add-to-cart-button, ' +
             'input[name="submit.add-to-cart"]'
@@ -103,10 +84,8 @@ export async function checkAmazon(product) {
             await buyNowButton.count() > 0 &&
             await buyNowButton.first().isVisible().catch(() => false);
 
+        // ページ内テキスト
         const text = await page.locator("body").innerText();
-
-        console.log("Amazon ページ先頭:");
-        console.log(text.substring(0, 500));
 
         const hasStock = text.includes("在庫あり");
 
@@ -125,22 +104,21 @@ export async function checkAmazon(product) {
             (hasCartButton || hasBuyNowButton) &&
             !outOfStock;
 
-        await browser.close();
-
         return {
             success: true,
             inStock
         };
 
     } catch (error) {
-        if (browser) {
-            await browser.close();
-        }
-
         return {
             success: false,
             inStock: false,
             error: error.message
         };
+
+    } finally {
+        if (browser) {
+            await browser.close();
+        }
     }
 }

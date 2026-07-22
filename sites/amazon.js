@@ -20,6 +20,10 @@ export async function checkAmazon(product) {
         await page.waitForTimeout(5000);
 
         const text = await page.locator("body").innerText();
+       
+        console.log("Amazon ページ先頭:");
+        console.log(text.substring(0, 1000));
+        
 
         const hasStock = text.includes("在庫あり");
         const hasCart = text.includes("カートに入れる");

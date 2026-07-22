@@ -91,7 +91,6 @@ for (const product of products) {
         default:
             console.log("未対応サイト");
             continue;
-
     }
 
 
@@ -100,7 +99,6 @@ for (const product of products) {
         console.log("ページ取得失敗");
         console.log(result.error);
         continue;
-
     }
 
 
@@ -111,7 +109,6 @@ for (const product of products) {
     } else {
 
         console.log("🔴 現在注文不可");
-
     }
 
 
@@ -132,7 +129,6 @@ for (const product of products) {
 
         console.log("前回状態取得エラー");
         console.log(selectError);
-
     }
 
 
@@ -178,13 +174,17 @@ for (const product of products) {
                 siteNames[product.site] ?? product.site;
 
 
+            const notificationUrl =
+                product.notifyUrl || product.url;
+
+
             await sendLine(
 `📦 再入荷通知
 
 販売サイト：${siteName}
 商品：${product.name}
 
-🔗 ${product.url}`
+🔗 ${notificationUrl}`
             );
 
 
@@ -193,9 +193,7 @@ for (const product of products) {
         } else {
 
             console.log("通知OFFのため送信しません");
-
         }
-
     }
 
 
@@ -223,10 +221,8 @@ for (const product of products) {
     } else {
 
         console.log("状態更新OK");
-
     }
 
 
     console.log("");
-
 }
